@@ -1,24 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom'
+import Header from "./components/Header";
+import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
+import Home from './pages/Home'
+import Recipe from './pages/Recipe'
+import NotFound from './pages/NotFound'
+
+
+// Eliminates the cache data from being lost with the apollo client, created a merge function so that InMemoryCache can safely merge
+const cache = new InMemoryCache({
+  typePolicies: {
+      Query: {
+          fields: {
+              chefs:{
+                  merge(existing, incoming){
+                      return incoming;
+                  },
+              },
+              recipes:{
+                  merge(existing, incoming){
+                      return incoming;
+                  },
+              },
+          }
+      }
+  }
+})
+
+const client = new ApolloClient({
+  uri: 'https://bentobox-backend.herokuapp.com/graphql',
+  cache,
+});
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <ApolloProvider client={client}>
+        <Router>
+        <Header />
+          <div className="container">
+            <Routes>
+              <Route path='/' element={<Home />} />
+              <Route path='/recipes/:id' element={<Recipe />} />
+              <Route path='*' element={<NotFound />} />
+            </Routes>
+          </div>
+        </Router>
+      </ApolloProvider>
+    </>
   );
 }
 
